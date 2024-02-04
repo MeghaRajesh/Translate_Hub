@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "73015744297",
+    "project_id": "finalproject-edf90",
+    "storage_bucket": "finalproject-edf90.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:73015744297:android:fc653c848fe153fed2c938",
+        "android_client_info": {
+          "package_name": "com.example.final_proj"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB_789YKZjEaV5kC9kxDA2V37kPzVnFmfk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
