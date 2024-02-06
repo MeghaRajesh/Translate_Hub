@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'voice.dart';
 
 class TranslatePage extends StatelessWidget {
   @override
@@ -54,7 +54,10 @@ class TranslatePage extends StatelessWidget {
               SizedBox(height: 50),
               ElevatedButton(
                 onPressed: () {
-                  // Handle chat option
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => VoiceTranslation()),
+                  );
                 },
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.symmetric(
