@@ -192,7 +192,7 @@ class _TranslatorScreenState extends State<TranslatorScreen> {
         icon: Icon(Icons.arrow_drop_down, color: Colors.white),
         iconSize: 24,
         elevation: 16,
-        style: TextStyle(color: Colors.white),
+        style: TextStyle(color: Color.fromARGB(255, 134, 129, 186)),
         onChanged: onChanged,
         items: languages.map<DropdownMenuItem<String>>((String value) {
           return DropdownMenuItem<String>(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'whts.dart';
+import 'voice.dart';
 
 import 'package:firebase_core/firebase_core.dart';
 
@@ -14,6 +15,13 @@ void main() async {
     
   
   );
-  
-  runApp(Whats());
+  runApp(
+    MaterialApp(
+      title: 'Translate App',
+      home: Directionality(
+        textDirection: TextDirection.ltr, // Change this according to your app's text direction
+        child: Whats(),
+      ),
+    ),
+  );
 }
