@@ -17,6 +17,7 @@ class VoiceTranslation extends StatelessWidget {
   }
 }
 
+
 class TranslatorScreen extends StatefulWidget {
   @override
   _TranslatorScreenState createState() => _TranslatorScreenState();
