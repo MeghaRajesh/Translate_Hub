@@ -1,6 +1,6 @@
 import 'package:final_proj/lang.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
+//import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart'; 
 import 'package:firebase_auth/firebase_auth.dart'; 
 
@@ -17,46 +17,47 @@ class Whats extends StatelessWidget {
   }
 }
 
+
 class SignInPage extends StatelessWidget {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-Future<void> signIn(BuildContext context) async {
-  try {
-    final email = _emailController.text.trim();
-    final password = _passwordController.text.trim();
+  Future<void> signIn(BuildContext context) async {
+    try {
+      final email = _emailController.text.trim();
+      final password = _passwordController.text.trim();
 
-    UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
-      email: email,
-      password: password,
-    );
-
-    // Navigate to the home page if the sign-in is successful
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => HomePage()),
-    );
-  } on FirebaseAuthException catch (e) {
-    if (e.code == 'user-not-found' || e.code == 'wrong-password') {
-      // Show invalid login message if the user is not found or the password is wrong
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Invalid email or password')),
+      UserCredential userCredential =
+          await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email,
+        password: password,
       );
-    } else {
-      // Show other errors
+
+      // Navigate to the home page if the sign-in is successful
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => HomePage()),
+      );
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'user-not-found' || e.code == 'wrong-password') {
+        // Show invalid login message if the user is not found or the password is wrong
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Invalid email or password')),
+        );
+      } else {
+        // Show other errors
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${e.message}')),
+        );
+      }
+    } catch (e) {
+      // Handle other exceptions
+      print('Error signing in: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: ${e.message}')),
+        SnackBar(content: Text('Error signing in')),
       );
     }
-  } catch (e) {
-    // Handle other exceptions
-    print('Error signing in: $e');
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Error signing in')),
-    );
   }
-}
-
 
   @override
   Widget build(BuildContext context) {
@@ -175,7 +176,7 @@ class SignUpPage extends StatelessWidget {
     String email = _emailController.text;
     String gender = _genderController.text;
 
-    FirebaseFirestore.instance.collection('users').add({
+    FirebaseFirestore.instance.collection('login').add({
       'name': name,
       'password':password,
       'age': age,
