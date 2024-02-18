@@ -40,7 +40,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     children: [
                       CircleAvatar(
                         radius: 50,
-                        backgroundImage: AssetImage('images/profilepic.png'),
+                        backgroundImage: AssetImage('images/profilepic.jpg'),
                       ),
                       Positioned(
                         bottom: 0,
@@ -84,6 +84,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         border: InputBorder.none,
                         contentPadding: EdgeInsets.symmetric(vertical: 5, horizontal: 20),
                       ),
+                      cursorColor: Colors.black, // Set cursor color to black
                       onChanged: (value) {
                         setState(() {
                           _name = value;
@@ -121,6 +122,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         border: InputBorder.none,
                         contentPadding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
                       ),
+                      cursorColor: Colors.black, // Set cursor color to black
                       onChanged: (value) {
                         setState(() {
                           _address = value;
@@ -158,6 +160,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         border: InputBorder.none,
                         contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
                       ),
+                      cursorColor: Colors.black, // Set cursor color to black
                       onChanged: (value) {
                         setState(() {
                           _email = value;
@@ -195,6 +198,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         border: InputBorder.none,
                         contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
                       ),
+                      cursorColor: Colors.black, // Set cursor color to black
                       onChanged: (value) {
                         setState(() {
                           _phoneNumber = value;

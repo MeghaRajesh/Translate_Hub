@@ -29,45 +29,27 @@ class _TranslatorScreenState extends State<TranslatorScreen> {
   final FlutterTts flutterTts = FlutterTts();
   String translatedText = '';
   bool isListening = false;
-  List<String> languages = ['Select', 'English', 'French', 'Hindi', 'German']; // Adjusted languages list
-  String selectedLanguage1 = 'Select'; // Default selection for the first dropdown
-  String selectedLanguage2 = 'Select'; // Default selection for the second dropdown
+  List<String> languages = ['Select ', 'English', 'French', 'Hindi', 'German'];
+  String selectedLanguage1 = 'Select ';
+  String selectedLanguage2 = 'Select ';
 
-  void translateText(String text) async {
-    String toLanguage = 'en'; // Default translation language to English
-    if (selectedLanguage1 == 'English' && selectedLanguage2 == 'Hindi') {
-      toLanguage = 'hi';
-    } else if (selectedLanguage1 == 'Hindi' && selectedLanguage2 == 'English') {
-      toLanguage = 'en';
-    } else if (selectedLanguage1 == 'English' && selectedLanguage2 == 'French') {
-      toLanguage = 'fr';
-    } else if (selectedLanguage1 == 'French' && selectedLanguage2 == 'English') {
-      toLanguage = 'en';
-    } else if (selectedLanguage1 == 'English' && selectedLanguage2 == 'German') {
-      toLanguage = 'de';
-    } else if (selectedLanguage1 == 'German' && selectedLanguage2 == 'English') {
-      toLanguage = 'en';
-    }
-    Translation translation = await translator.translate(text, to: toLanguage);
+  void translateText(String text, String targetLanguage) async {
+    Translation translation = await translator.translate(text, to: targetLanguage);
     setState(() {
       translatedText = translation.text;
     });
   }
 
   void startListening() async {
-    if (languages.contains(selectedLanguage1) && languages.contains(selectedLanguage2)) {
-      if (await speech.initialize()) {
-        setState(() {
-          isListening = true;
-        });
-        speech.listen(
-          onResult: (result) {
-            translateText(result.recognizedWords);
-          },
-        );
-      }
-    } else {
-      // Optionally, you can display a message or handle the case when the selected languages are not in the supported list.
+    if (await speech.initialize()) {
+      setState(() {
+        isListening = true;
+      });
+      speech.listen(
+        onResult: (result) {
+          translateText(result.recognizedWords, selectedLanguage2 == 'English' ? 'en' : selectedLanguage2 == 'French' ? 'fr' : selectedLanguage2 == 'Hindi' ? 'hi' : 'de');
+        },
+      );
     }
   }
 
@@ -137,12 +119,12 @@ class _TranslatorScreenState extends State<TranslatorScreen> {
                       setState(() {
                         selectedLanguage1 = newValue ?? 'Select';
                       });
-                    }),
+                    }, selectedLanguage1 == 'English' ? 'en' : selectedLanguage1 == 'French' ? 'fr' : selectedLanguage1 == 'Hindi' ? 'hi' : 'de'),
                     buildDropdown(selectedLanguage2, (String? newValue) {
                       setState(() {
                         selectedLanguage2 = newValue ?? 'Select';
                       });
-                    }),
+                    }, selectedLanguage2 == 'English' ? 'en' : selectedLanguage2 == 'French' ? 'fr' : selectedLanguage2 == 'Hindi' ? 'hi' : 'de'),
                   ],
                 ),
               ),
@@ -165,7 +147,8 @@ class _TranslatorScreenState extends State<TranslatorScreen> {
               SizedBox(height: 40.0),
               ElevatedButton(
                 onPressed: () {
-                  flutterTts.setLanguage('hi-IN'); // Set the language to Hindi
+                  // Speak the translated text in Hindi when the button is pressed
+                  flutterTts.setLanguage(selectedLanguage2 == 'Hindi' ? 'hi-IN' : 'en-US'); // Set the language to Hindi if selected, otherwise English
                   flutterTts.speak(translatedText);
                 },
                 child: Text('Speak'),
@@ -196,7 +179,7 @@ class _TranslatorScreenState extends State<TranslatorScreen> {
     );
   }
 
-  Widget buildDropdown(String selectedValue, void Function(String?) onChanged) {
+  Widget buildDropdown(String selectedValue, void Function(String?) onChanged, String targetLanguage) {
     return Container(
       width: 120,
       height: 30.0,
@@ -210,7 +193,12 @@ class _TranslatorScreenState extends State<TranslatorScreen> {
         iconSize: 24,
         elevation: 16,
         style: TextStyle(color: Color.fromARGB(255, 134, 129, 186)),
-        onChanged: onChanged,
+        onChanged: (newValue) {
+          onChanged(newValue);
+          if (newValue != 'Select ') {
+            translateText(translatedText, targetLanguage);
+          }
+        },
         items: languages.map<DropdownMenuItem<String>>((String value) {
           return DropdownMenuItem<String>(
             value: value,

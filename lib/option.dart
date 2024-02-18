@@ -1,11 +1,47 @@
 import 'package:flutter/material.dart';
 import 'voice.dart';
+import 'edit_profile.dart'; // Import the edit profile page
+import 'login.dart'; // Import the login page
 
 class TranslatePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      
+      appBar: AppBar(
+        title: Text('TranslateHub'),
+        leading: PopupMenuButton(
+          icon: Icon(Icons.menu),
+          itemBuilder: (BuildContext context) => [
+            PopupMenuItem(
+              child: ListTile(
+                leading: Icon(Icons.account_circle), // Add profile icon
+                title: Text('Profile'),
+              ),
+              value: 'profile',
+            ),
+            PopupMenuItem(
+              child: ListTile(
+                leading: Icon(Icons.logout), // Add logout icon
+                title: Text('Logout'),
+              ),
+              value: 'logout',
+            ),
+          ],
+          onSelected: (String value) {
+            if (value == 'profile') {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => EditProfilePage()),
+              );
+            } else if (value == 'logout') {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => SignInPage()),
+              );
+            }
+          },
+        ),
+      ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -18,14 +54,6 @@ class TranslatePage extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
-                'TranslateHub',
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
               SizedBox(height: 20),
               Image.asset(
                 'images/option.jpg', // Provide your image path here
@@ -76,3 +104,4 @@ class TranslatePage extends StatelessWidget {
     );
   }
 }
+
