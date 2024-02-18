@@ -8,9 +8,12 @@ class TranslatePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('TranslateHub'),
+        backgroundColor: Color.fromARGB(255, 83, 34, 223),
+        title: Text('TranslateHub',
+        style: TextStyle(color: Colors.white),
+        ),
         leading: PopupMenuButton(
-          icon: Icon(Icons.menu),
+          icon: Icon(Icons.menu,color: Colors.white),
           itemBuilder: (BuildContext context) => [
             PopupMenuItem(
               child: ListTile(
@@ -47,7 +50,7 @@ class TranslatePage extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [const Color.fromARGB(255, 83, 34, 223), Colors.white],
+            colors: [const Color.fromARGB(255, 83, 34, 223), Color.fromARGB(255, 204, 187, 250)],
           ),
         ),
         child: Center(
