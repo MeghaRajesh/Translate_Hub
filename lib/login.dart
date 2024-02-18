@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'signup.dart'; 
+import 'signup.dart';
 import 'option.dart';
 // Assuming the SignUpPage is in a file named signup.dart
- // Assuming the ProfilePage is in a file named profile.dart
+// Assuming the ProfilePage is in a file named profile.dart
 
 class SignInPage extends StatelessWidget {
   final TextEditingController _emailController = TextEditingController();
@@ -35,119 +35,99 @@ class SignInPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black, // Set background color to black
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 40),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [const Color.fromARGB(255, 83, 34, 223), Colors.white],
+          ),
+        ),
+        child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'Sign In',
+                'TranslateHub',
                 style: TextStyle(
-                  fontSize: 30,
+                  fontSize: 32,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
-                textAlign: TextAlign.center,
               ),
-              SizedBox(height: 40),
-              // Enter Email TextField
-              Padding(
-                padding: const EdgeInsets.only(bottom: 20),
-                child: Text(
-                  'Enter Email',
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-              Container(
-                height: 50,
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.white), // Border color
-                  borderRadius: BorderRadius.circular(25),
-                ),
-                child: TextField(
-                  controller: _emailController,
-                  style: TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(horizontal: 20),
-                  ),
+              SizedBox(height: 20),
+              Text(
+                'Translate to Go',
+                style: TextStyle(
+                  fontSize: 18,
+                  color: Colors.white,
                 ),
               ),
               SizedBox(height: 20),
-              // Enter Password TextField
-              Padding(
-                padding: const EdgeInsets.only(bottom: 20),
-                child: Text(
-                  'Enter Password',
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-              Container(
-                height: 50,
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.white), // Border color
-                  borderRadius: BorderRadius.circular(25),
-                ),
-                child: TextField(
-                  controller: _passwordController,
-                  obscureText: true,
-                  style: TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(horizontal: 20),
-                  ),
-                ),
+              Image.asset(
+                'images/signin.jpg', // Provide your image path here
+                width: 300,
+                height: 300,
               ),
               SizedBox(height: 20),
-              // Sign In Button with Gradient
-              Container(
-                height: 50,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(25),
-                  gradient: LinearGradient(
-                    colors: [
-                      Color.fromARGB(255, 2, 43, 10),
-                      Colors.green
-                    ], // Adjust gradient colors as needed
-                  ),
-                ),
-                child: ElevatedButton(
-                  onPressed: () {
-                    _signIn(context); // Attempt to sign in
-                  },
-                  style: ElevatedButton.styleFrom(
-                    primary: Colors.transparent, // Make button transparent
-                    shadowColor: Colors.transparent, // Remove button shadow
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  children: [
+                    TextField(
+                      controller: _emailController,
+                      decoration: InputDecoration(
+                        labelText: 'Email',
+                        filled: true,
+                        fillColor: Colors.white,
+                      ),
                     ),
-                  ),
-                  child: Text(
-                    'Sign In',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-              ),
-              SizedBox(height: 20),
-              // "Don't have an account? Sign Up" text
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => SignUpPage()),
-                  );
-                },
-                child: Text(
-                  "Don't have an account? Sign Up",
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.white,
-                    decoration: TextDecoration.underline,
-                  ),
-                  textAlign: TextAlign.center,
+                    SizedBox(height: 20),
+                    TextField(
+                      controller: _passwordController,
+                      obscureText: true,
+                      decoration: InputDecoration(
+                        labelText: 'Password',
+                        filled: true,
+                        fillColor: Colors.white,
+                      ),
+                    ),
+                    SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: () {
+                        _signIn(
+                            context); // Call the _signIn method which navigates to TranslatePage on successful sign-in
+                      },
+                      child: Text('Sign In'),
+                    ),
+                    SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "Don't have an account? ",
+                          style: TextStyle(
+                              color: Color.fromARGB(255, 77, 73, 124)),
+                        ),
+                        InkWell(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => SignUpPage()),
+                            );
+                          },
+                          child: Text(
+                            'Sign Up',
+                            style: TextStyle(
+                              color: Color.fromARGB(255, 77, 73, 124),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ],
