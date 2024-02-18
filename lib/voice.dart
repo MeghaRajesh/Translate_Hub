@@ -29,28 +29,45 @@ class _TranslatorScreenState extends State<TranslatorScreen> {
   final FlutterTts flutterTts = FlutterTts();
   String translatedText = '';
   bool isListening = false;
-  List<String> languages = ['Select ', 'English', 'French', 'Hindi', 'German']; // Adjusted languages list
-  String selectedLanguage1 = 'Select '; // Default selection for the first dropdown
-  String selectedLanguage2 = 'Select '; // Default selection for the second dropdown
+  List<String> languages = ['Select', 'English', 'French', 'Hindi', 'German']; // Adjusted languages list
+  String selectedLanguage1 = 'Select'; // Default selection for the first dropdown
+  String selectedLanguage2 = 'Select'; // Default selection for the second dropdown
 
   void translateText(String text) async {
-    Translation translation =
-        await translator.translate(text, to: 'hi'); // Translate to Hindi
+    String toLanguage = 'en'; // Default translation language to English
+    if (selectedLanguage1 == 'English' && selectedLanguage2 == 'Hindi') {
+      toLanguage = 'hi';
+    } else if (selectedLanguage1 == 'Hindi' && selectedLanguage2 == 'English') {
+      toLanguage = 'en';
+    } else if (selectedLanguage1 == 'English' && selectedLanguage2 == 'French') {
+      toLanguage = 'fr';
+    } else if (selectedLanguage1 == 'French' && selectedLanguage2 == 'English') {
+      toLanguage = 'en';
+    } else if (selectedLanguage1 == 'English' && selectedLanguage2 == 'German') {
+      toLanguage = 'de';
+    } else if (selectedLanguage1 == 'German' && selectedLanguage2 == 'English') {
+      toLanguage = 'en';
+    }
+    Translation translation = await translator.translate(text, to: toLanguage);
     setState(() {
       translatedText = translation.text;
     });
   }
 
   void startListening() async {
-    if (await speech.initialize()) {
-      setState(() {
-        isListening = true;
-      });
-      speech.listen(
-        onResult: (result) {
-          translateText(result.recognizedWords);
-        },
-      );
+    if (languages.contains(selectedLanguage1) && languages.contains(selectedLanguage2)) {
+      if (await speech.initialize()) {
+        setState(() {
+          isListening = true;
+        });
+        speech.listen(
+          onResult: (result) {
+            translateText(result.recognizedWords);
+          },
+        );
+      }
+    } else {
+      // Optionally, you can display a message or handle the case when the selected languages are not in the supported list.
     }
   }
 
@@ -107,7 +124,7 @@ class _TranslatorScreenState extends State<TranslatorScreen> {
               SizedBox(height: 1.0),
               Container(
                 width: 300,
-      height: 70.0,
+                height: 70.0,
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(10.0),
@@ -148,7 +165,6 @@ class _TranslatorScreenState extends State<TranslatorScreen> {
               SizedBox(height: 40.0),
               ElevatedButton(
                 onPressed: () {
-                  // Speak the translated text in Hindi when the button is pressed
                   flutterTts.setLanguage('hi-IN'); // Set the language to Hindi
                   flutterTts.speak(translatedText);
                 },
