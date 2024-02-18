@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'signup.dart';
 import 'option.dart';
-// Assuming the SignUpPage is in a file named signup.dart
-// Assuming the ProfilePage is in a file named profile.dart
+
 
 class SignInPage extends StatelessWidget {
   final TextEditingController _emailController = TextEditingController();

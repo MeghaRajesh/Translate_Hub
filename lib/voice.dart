@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:translator/translator.dart';
 import 'package:flutter_tts/flutter_tts.dart';
-import 'option.dart'; // Assuming the option.dart file is in the same directory
+import 'option.dart'; 
 
 class VoiceTranslation extends StatelessWidget {
   @override

@@ -19,7 +19,7 @@ void main() async {
     MaterialApp(
       title: 'Translate App',
       home: Directionality(
-        textDirection: TextDirection.ltr, // Change this according to your app's text direction
+        textDirection: TextDirection.ltr, 
         child: SignInPage(),
       ),
     ),
