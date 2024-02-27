@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'signup.dart';
 import 'option.dart';
-
+import 'user_singleton.dart';
 
 class SignInPage extends StatelessWidget {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  String userEmail = '';
 
   Future<void> _signIn(BuildContext context) async {
     try {
@@ -15,9 +16,11 @@ class SignInPage extends StatelessWidget {
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
+       UserSingleton().userEmail = _emailController.text.trim();
 
       // Navigate to the Home page after successful sign-in
-      Navigator.pushReplacement(
+      // ignore: use_build_context_synchronously
+       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => TranslatePage()),
       );
@@ -39,7 +42,10 @@ class SignInPage extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [const Color.fromARGB(255, 83, 34, 223), Colors.white],
+            colors: [
+              const Color.fromARGB(255, 83, 34, 223),
+              Color.fromARGB(255, 204, 187, 250)
+            ],
           ),
         ),
         child: Center(
@@ -75,6 +81,9 @@ class SignInPage extends StatelessWidget {
                   children: [
                     TextField(
                       controller: _emailController,
+                      onChanged: (value) {
+                         UserSingleton().userEmail = value;
+                      },
                       decoration: InputDecoration(
                         labelText: 'Email',
                         filled: true,
@@ -136,3 +145,5 @@ class SignInPage extends StatelessWidget {
     );
   }
 }
+
+

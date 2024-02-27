@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import 'user_singleton.dart';
+
+
 void main() {
   runApp(ChatPage());
 }
@@ -153,7 +156,7 @@ class ChatScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Chat with $recipient'),
+        title: Text(' $recipient'),
       ),
       body: ChatRoom(defaultLanguage: defaultLanguage, recipient: recipient),
     );
@@ -180,100 +183,113 @@ class _ChatRoomState extends State<ChatRoom> {
   @override
   void initState() {
     super.initState();
-    _getCurrentUser();
     _defaultLanguage = widget.defaultLanguage;
   }
 
-  
- void _getCurrentUser() async {
-  try {
-    QuerySnapshot userQuery = await FirebaseFirestore.instance.collection('users').where('email', isEqualTo: 'email').limit(1).get();
-    if (userQuery.docs.isNotEmpty) {
-      DocumentSnapshot userSnapshot = userQuery.docs.first;
-      // Get the name from the user document
-      setState(() {
-        _currentUser = userSnapshot['name'];
-      });
+
+
+
+void _sendMessage(String message) async {
+  String userEmail = UserSingleton().userEmail;
+  if (widget.recipient != null && _defaultLanguage != null) {
+    // Determine the target language based on the default language
+    String targetLanguage = _defaultLanguage == 'English' ? 'fr' : 'en';
+
+    // Translate the message to the target language
+    String translatedMessage = await translate(message, targetLanguage);
+
+    // Query Firestore to find the user document based on the email
+    QuerySnapshot userSnapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .where('email', isEqualTo: userEmail)
+        .limit(1)
+        .get();
+
+    // Check if user snapshot is not null and contains documents
+    if (userSnapshot != null && userSnapshot.docs.isNotEmpty) {
+      var firstDoc = userSnapshot.docs.first;
+      // Check if the first document exists and is not null
+      if (firstDoc != null && firstDoc.exists) {
+        var userData = firstDoc.data() as Map<String, dynamic>;
+        // Check if the 'name' field exists and is not null
+        if (userData != null && userData.containsKey('name')) {
+          String senderName = userData['name'];
+
+          // Save the translated message to Firestore
+          await _messagesCollection.add({
+            'message': translatedMessage,
+            'sender': senderName, // Set sender's name
+            'recipient': widget.recipient,
+          });
+        } else {
+          print('Name field not found in user document');
+        }
+      } else {
+        print('User document does not exist');
+      }
     } else {
-      print('No user found for the provided email.');
+      print('User not found in Firestore');
     }
-  } catch (e) {
-    print('Error fetching user data: $e');
+  } else {
+    print('User not logged in or default language not set');
   }
-
-
-
-  }
-
-  void _sendMessage(String message) async {
-    if (widget.recipient != null && _defaultLanguage != null) {
-      // Determine the target language based on the default language
-      String targetLanguage =
-          _defaultLanguage == 'English' ? 'fr' : 'en';
-
-      // Translate the message to the target language
-      String translatedMessage = await translate(message, targetLanguage);
-
-      // Save the translated message to Firestore
-      await _messagesCollection.add({
-        'message': translatedMessage,
-        'sender': _currentUser,
-        'recipient': widget.recipient,
-      });
-    } else {
-      print('User not logged in or default language not set');
-    }
-  }
-
-  @override
- @override
-Widget build(BuildContext context) {
-  return Column(
-    children: [
-      Expanded(
-        child: StreamBuilder(
-          stream: _messagesCollection
-              .where('recipient', isEqualTo: widget.recipient)
-              .snapshots(),
-          builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-            if (snapshot.hasError) {
-              return Text('Error: ${snapshot.error}');
-            }
-
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return CircularProgressIndicator();
-            }
-
- return ListView.builder(
-  itemCount: snapshot.data!.docs.length,
-  itemBuilder: (context, index) {
-    var message = snapshot.data!.docs[index];
-    var sender = message['sender'] ?? 'Unknown Sender';
-    var messageText = message['message'] ?? 'No Message';
-
-    return ChatMessage(
-      message: messageText,
-      sender: sender,
-    );
-  },
-);
-
-
-
-          },
-        ),
-      ),
-      Divider(height: 1.0),
-      Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-        ),
-        child: _buildTextComposer(),
-      ),
-    ],
-  );
 }
 
+
+
+
+
+
+
+
+
+
+  
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Expanded(
+          child: StreamBuilder(
+            stream: _messagesCollection
+                .where('recipient', isEqualTo: widget.recipient)
+                .snapshots(),
+            builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+              if (snapshot.hasError) {
+                return Text('Error: ${snapshot.error}');
+              }
+
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return CircularProgressIndicator();
+              }
+
+              return ListView.builder(
+                itemCount: snapshot.data!.docs.length,
+                itemBuilder: (context, index) {
+                  var message = snapshot.data!.docs[index];
+                  var sender = message['sender'] ?? 'Unknown Sender';
+                  var messageText = message['message'] ?? 'No Message';
+
+                  return ChatMessage(
+                    message: messageText,
+                    sender: sender,
+                  );
+                },
+              );
+            },
+          ),
+        ),
+        Divider(height: 1.0),
+        Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+          ),
+          child: _buildTextComposer(),
+        ),
+      ],
+    );
+  }
 
   Widget _buildTextComposer() {
     return IconTheme(
