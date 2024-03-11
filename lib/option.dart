@@ -1,15 +1,19 @@
+import 'package:final_proj/lang.dart';
 import 'package:flutter/material.dart';
 import 'voice.dart';
 import 'edit_profile.dart'; // Import the edit profile page
 import 'login.dart'; // Import the login page
 
 class TranslatePage extends StatelessWidget {
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+     
       appBar: AppBar(
         backgroundColor: Color.fromARGB(255, 83, 34, 223),
         title: Text('TranslateHub',
+        
         style: TextStyle(color: Colors.white),
         ),
         leading: PopupMenuButton(
@@ -66,7 +70,10 @@ class TranslatePage extends StatelessWidget {
               SizedBox(height: 50),
               ElevatedButton(
                 onPressed: () {
-                  // Handle chat option
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => LanguagePage()),
+                  );
                 },
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.symmetric(
@@ -100,6 +107,7 @@ class TranslatePage extends StatelessWidget {
                       fontSize: 18), // Adjust the font size as needed
                 ),
               ),
+              
             ],
           ),
         ),
