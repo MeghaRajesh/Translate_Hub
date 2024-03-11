@@ -1,14 +1,15 @@
+import 'package:final_proj/chat.dart';
 import 'package:flutter/material.dart';
 import 'option.dart';
 
 
 
-class HomePage extends StatelessWidget {
+class LanguagePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Home Page'),
+        title: Text('Choose Language'),
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -37,7 +38,7 @@ class HomePage extends StatelessWidget {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => TranslatePage()),
+                    MaterialPageRoute(builder: (context) => ChatPage(receiverUserEmail: 'saranya29testing@gmail.com', receiverUsername: 'Saranya',)),
                   );
                 },
                 child: Text(
@@ -50,7 +51,7 @@ class HomePage extends StatelessWidget {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => TranslatePage()),
+                    MaterialPageRoute(builder: (context) => ChatPage(receiverUsername: '', receiverUserEmail: '',)),
                   );
                 },
                 child: Text(
