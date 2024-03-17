@@ -1,8 +1,11 @@
-import 'package:final_proj/lang.dart';
+//import 'package:final_proj/lang.dart';
 import 'package:flutter/material.dart';
+import 'package:mechat/screens/chat_screen.dart';
+import 'package:mechat/screens/login_screen.dart';
 import 'voice.dart';
 import 'edit_profile.dart'; // Import the edit profile page
-import 'login.dart'; // Import the login page
+import 'login_screen.dart'; // Import the login page
+import 'chat_screen.dart';
 
 class TranslatePage extends StatelessWidget {
   
@@ -43,7 +46,7 @@ class TranslatePage extends StatelessWidget {
             } else if (value == 'logout') {
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (context) => SignInPage()),
+                MaterialPageRoute(builder: (context) => LoginPage()),
               );
             }
           },
@@ -70,10 +73,10 @@ class TranslatePage extends StatelessWidget {
               SizedBox(height: 50),
               ElevatedButton(
                 onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => LanguagePage()),
-                  );
+                  // Navigator.push(
+                  //   context,
+                  //   MaterialPageRoute(builder: (context) => ChatScreen(usermail: usermail,mail: mail,),
+                  // );
                 },
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.symmetric(
@@ -115,4 +118,3 @@ class TranslatePage extends StatelessWidget {
     );
   }
 }
-
