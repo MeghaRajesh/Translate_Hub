@@ -1,334 +1,311 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:mechat/controllers/access_controller.dart';
+import 'package:mechat/controllers/message_controller.dart';
+import 'package:mechat/widgets/chat_bubble.dart';
+import 'package:mechat/widgets/chat_image_bubble.dart';
 
-import 'user_singleton.dart';
-
-class ChatPage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'TranslateHub Chat',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: DefaultLanguagePrompt(),
-    );
-  }
-}
-
-class DefaultLanguagePrompt extends StatefulWidget {
-  @override
-  _DefaultLanguagePromptState createState() => _DefaultLanguagePromptState();
-}
-
-class _DefaultLanguagePromptState extends State<DefaultLanguagePrompt> {
-  String? _selectedLanguage;
-
-  void _showLanguagePrompt(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Select Default Language'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                title: Text('English'),
-                onTap: () {
-                  setState(() {
-                    _selectedLanguage = 'English';
-                  });
-                  Navigator.pop(context);
-                  _showUserList(context);
-                },
-              ),
-              ListTile(
-                title: Text('French'),
-                onTap: () {
-                  setState(() {
-                    _selectedLanguage = 'French';
-                  });
-                  Navigator.pop(context);
-                  _showUserList(context);
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  void _showUserList(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) =>
-            UserListScreen(defaultLanguage: _selectedLanguage!),
-      ),
-    );
-  }
+class ChatScreen extends StatefulWidget {
+  final String usermail;
+  final String mail;
+  const ChatScreen({required this.usermail, Key? key, required this.mail})
+      : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: ElevatedButton(
-          onPressed: () {
-            _showLanguagePrompt(context);
-          },
-          child: Text('Select Default Language'),
-        ),
-      ),
-    );
-  }
+  State<ChatScreen> createState() => _ChatScreenState();
 }
 
-class UserListScreen extends StatelessWidget {
-  final String defaultLanguage;
-
-  UserListScreen({required this.defaultLanguage});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Select User to Chat'),
-      ),
-      body: UserListView(defaultLanguage: defaultLanguage),
-    );
-  }
-}
-
-class UserListView extends StatelessWidget {
-  final String defaultLanguage;
-
-  UserListView({required this.defaultLanguage});
-
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder(
-      stream: FirebaseFirestore.instance.collection('users').snapshots(),
-      builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-        if (snapshot.hasError) {
-          return Text('Error: ${snapshot.error}');
-        }
-
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return CircularProgressIndicator();
-        }
-
-        return ListView(
-          children: snapshot.data!.docs.map((DocumentSnapshot document) {
-            return ListTile(
-              title: Text(document['name']),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ChatScreen(
-                      defaultLanguage: defaultLanguage,
-                      recipient: document['name'],
-                    ),
-                  ),
-                );
-              },
-            );
-          }).toList(),
-        );
-      },
-    );
-  }
-}
-
-class ChatScreen extends StatelessWidget {
-  final String defaultLanguage;
-  final String recipient;
-
-  ChatScreen({required this.defaultLanguage, required this.recipient});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(' $recipient'),
-      ),
-      body: ChatRoom(defaultLanguage: defaultLanguage, recipient: recipient),
-    );
-  }
-}
-
-class ChatRoom extends StatefulWidget {
-  final String defaultLanguage;
-  final String recipient;
-
-  ChatRoom({required this.defaultLanguage, required this.recipient});
-
-  @override
-  _ChatRoomState createState() => _ChatRoomState();
-}
-
-class _ChatRoomState extends State<ChatRoom> {
+class _ChatScreenState extends State<ChatScreen> {
+  TextEditingController chatcontroller = TextEditingController();
   final TextEditingController _controller = TextEditingController();
-  final CollectionReference _messagesCollection =
-      FirebaseFirestore.instance.collection('messages');
-  String? _currentUser;
-  String? _defaultLanguage;
+
+  ChatRoomController chatRoom = Get.find();
+  String? currentUserid;
 
   @override
   void initState() {
+    // TODO: implement initState
     super.initState();
-    _defaultLanguage = widget.defaultLanguage;
-    _currentUser = UserSingleton().userEmail; // Set current user
-  }
-
-  void _sendMessage(String message) async {
-    if (widget.recipient != null &&
-        _defaultLanguage != null &&
-        _currentUser != null) {
-      // Determine the target language based on the default language
-      String targetLanguage = _defaultLanguage == 'English' ? 'fr' : 'en';
-
-      // Translate the message to the target language
-      String translatedMessage = await translate(message, targetLanguage);
-
-      // Save the translated message to Firestore
-      await _messagesCollection.add({
-        'message': translatedMessage,
-        'sender': _currentUser, // Set sender's email
-        'recipient': widget.recipient,
-      });
-    } else {
-      print(
-          'User not logged in, default language not set, or recipient not specified');
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser != null) {
+      currentUserid = currentUser.uid.toString();
+      print('Here is the uid: $currentUserid');
     }
   }
 
+  AccessStorage access = Get.find();
+
   @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Expanded(
-          child: StreamBuilder(
-            stream: _messagesCollection
-                .where('recipient', isEqualTo: widget.recipient)
-                .where('sender', isEqualTo: _currentUser)
-                .snapshots(),
-            builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-              if (snapshot.hasError) {
-                return Text('Error: ${snapshot.error}');
-              }
-
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return CircularProgressIndicator();
-              }
-
-              return ListView.builder(
-                itemCount: snapshot.data!.docs.length,
-                itemBuilder: (context, index) {
-                  var message = snapshot.data!.docs[index];
-                  var sender = message['sender'] ?? 'Unknown Sender';
-                  var messageText = message['message'] ?? 'No Message';
-
-                  return ChatMessage(
-                    message: messageText,
-                    sender: sender,
-                  );
-                },
-              );
-            },
-          ),
-        ),
-        Divider(height: 1.0),
-        Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).cardColor,
-          ),
-          child: _buildTextComposer(),
-        ),
-      ],
-    );
+  void dispose() {
+    chatcontroller.dispose();
+    _controller.dispose();
+    super.dispose();
   }
-
-  Widget _buildTextComposer() {
-    return IconTheme(
-      data: IconThemeData(color: Theme.of(context).primaryColor),
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 8.0),
-        child: Row(
-          children: <Widget>[
-            Flexible(
-              child: TextField(
-                controller: _controller,
-                decoration:
-                    InputDecoration.collapsed(hintText: 'Send a message'),
-              ),
-            ),
-            Container(
-              margin: EdgeInsets.symmetric(horizontal: 4.0),
-              child: IconButton(
-                icon: Icon(Icons.send),
-                onPressed: () {
-                  if (_controller.text.isNotEmpty) {
-                    _sendMessage(_controller.text);
-                    _controller.clear();
-                  }
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class ChatMessage extends StatelessWidget {
-  final String message;
-  final String sender;
-
-  ChatMessage({required this.message, required this.sender});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 10.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Container(
-            margin: const EdgeInsets.only(right: 16.0),
-            child: CircleAvatar(
-              child:
-                  Text(sender[0]), // Displaying first letter of sender's name
-            ),
-          ),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(
-                  sender,
-                  style: Theme.of(context).textTheme.subtitle1,
+    List ids = [widget.usermail, widget.mail];
+
+    ids.sort();
+    String chatdoc = ids.join("_");
+
+    return Scaffold(
+      backgroundColor: const Color.fromARGB(255, 183, 165, 245),
+      body: StreamBuilder(
+        stream: FirebaseFirestore.instance
+            .collection('chatroom')
+            .doc(chatdoc)
+            .collection('messages')
+            .orderBy('timestamp', descending: true)
+            .snapshots(),
+        builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CupertinoActivityIndicator());
+          } else {
+            return Column(
+              children: [
+                Expanded(
+                  child: ListView.builder(
+                    reverse: true,
+                    itemCount: snapshot.data!.docs.length,
+                    itemBuilder: (context, index) {
+                      String currentUser =
+                          FirebaseAuth.instance.currentUser!.uid;
+                      final DocumentSnapshot documentSnapshot =
+                          snapshot.data!.docs[index];
+
+                      final isCurrentUser =
+                          documentSnapshot['useruid'] == currentUser;
+
+                      return Column(
+                        children: [
+                          ChatBubble(
+                              chatMsg: documentSnapshot['message'],
+                              isCurrentUser: isCurrentUser),
+                          ChatImageBubble(
+                              chatImage: documentSnapshot['imageurl'],
+                              isCurrentUser: isCurrentUser,
+                              caption: documentSnapshot['caption']),
+                        ],
+                      );
+                    },
+                  ),
                 ),
-                Container(
-                  margin: const EdgeInsets.only(top: 5.0),
-                  child: Text(message),
+                Padding(
+                  padding:
+                      const EdgeInsets.only(left: 7, right: 10, bottom: 10),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        onPressed: () {
+                          access.getAccess(context);
+
+                          showModalBottomSheet(
+                            backgroundColor:
+                                const Color.fromARGB(255, 183, 165, 245),
+                            context: context,
+                            builder: (context) {
+                              return Column(
+                                children: [
+                                  const SizedBox(height: 50),
+                                  Center(
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        access.getAccess(context);
+                                        showDialog(
+                                          context: context,
+                                          builder: (context) {
+                                            return AlertDialog(
+                                              content: SizedBox(
+                                                height: 150,
+                                                child: Column(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceAround,
+                                                  children: [
+                                                    GestureDetector(
+                                                      onTap: () {
+                                                        access.pickImage(
+                                                            ImageSource.camera);
+                                                        Navigator.pop(context);
+                                                      },
+                                                      child: const ListTile(
+                                                        leading:
+                                                            Icon(Icons.camera),
+                                                        title: Text('Camera'),
+                                                      ),
+                                                    ),
+                                                    GestureDetector(
+                                                      onTap: () {
+                                                        access.pickImage(
+                                                            ImageSource
+                                                                .gallery);
+                                                        Navigator.pop(context);
+                                                      },
+                                                      child: const ListTile(
+                                                        leading:
+                                                            Icon(Icons.photo),
+                                                        title: Text('Gallary'),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                        );
+                                      },
+                                      child: Container(
+                                        height: 100,
+                                        width: 100,
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color:
+                                                  Colors.grey.withOpacity(0.5),
+                                              spreadRadius: 0.1,
+                                              blurRadius: 7,
+                                            )
+                                          ],
+                                        ),
+                                        child: const Icon(
+                                            Icons.camera_alt_outlined),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 50),
+                                  Container(
+                                    height: 50,
+                                    width: 250,
+                                    decoration: BoxDecoration(
+                                      color: const Color.fromARGB(
+                                          125, 255, 255, 255),
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: TextField(
+                                      maxLines: null,
+                                      controller: _controller,
+                                      textCapitalization:
+                                          TextCapitalization.sentences,
+                                      decoration: const InputDecoration(
+                                          hintText: 'Caption',
+                                          contentPadding: EdgeInsets.symmetric(
+                                              vertical: 10, horizontal: 10),
+                                          border: InputBorder.none),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 50),
+                                  GestureDetector(
+                                    onTap: () async {
+                                      if (access.imageUrl != null) {
+                                        await chatRoom.addMessage(
+                                            '',
+                                            widget.usermail,
+                                            context,
+                                            widget.mail,
+                                            chatdoc,
+                                            access.imageUrl.toString(),
+                                            _controller.text);
+
+                                        _controller.clear();
+                                        Navigator.pop(context);
+                                      }
+                                    },
+                                    child: Container(
+                                      height: 50,
+                                      width: 100,
+                                      decoration: BoxDecoration(
+                                          color: Colors.deepPurple,
+                                          borderRadius:
+                                              BorderRadius.circular(20)),
+                                      child: const Icon(
+                                        color: Colors.white,
+                                        Icons.send,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        },
+                        icon: const Icon(
+                          Icons.camera,
+                          color: Colors.deepPurple,
+                        ),
+                      ),
+                      Expanded(
+                        child: Container(
+                          height: 50,
+                          decoration: BoxDecoration(
+                            color: const Color.fromARGB(125, 255, 255, 255),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: TextField(
+                            maxLines: null,
+                            controller: chatcontroller,
+                            textCapitalization: TextCapitalization.sentences,
+                            decoration: const InputDecoration(
+                                hintText: 'Message',
+                                contentPadding: EdgeInsets.symmetric(
+                                    vertical: 10, horizontal: 10),
+                                border: InputBorder.none),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 7),
+                      Container(
+                        decoration: BoxDecoration(
+                            color: Colors.deepPurple,
+                            borderRadius: BorderRadius.circular(50)),
+                        child: IconButton(
+                          color: Colors.white,
+                          onPressed: () async {
+                            if (chatcontroller.text != '') {
+                              chatRoom.addMessage(
+                                  chatcontroller.text,
+                                  widget.usermail,
+                                  context,
+                                  widget.mail,
+                                  chatdoc,
+                                  '',
+                                  '');
+                            }
+
+                            chatcontroller.clear();
+                          },
+                          icon: const Icon(Icons.send),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
-            ),
-          ),
-        ],
+            );
+          }
+        },
+      ),
+      appBar: AppBar(
+        backgroundColor: Colors.deepPurple,
+        title: Text(
+          widget.usermail,
+          style: const TextStyle(letterSpacing: 5, color: Colors.white),
+        ),
+        centerTitle: true,
+        leading: IconButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+        ),
       ),
     );
   }
-}
-
-// Dummy translate function, replace with your actual translation logic
-Future<String> translate(String text, String targetLanguage) async {
-  // Simulate translation delay
-  await Future.delayed(Duration(seconds: 1));
-  // Dummy translation logic, just return the same text
-  return text;
 }
