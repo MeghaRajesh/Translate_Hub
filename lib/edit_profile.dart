@@ -280,3 +280,9 @@ void main() {
     home: EditProfilePage(),
   ));
 }
+
+void main() {
+  runApp(MaterialApp(
+    home: EditProfilePage(),
+  ));
+}
