@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // Import FirebaseAuth
-import 'package:cloud_firestore/cloud_firestore.dart'; // Import Firestore
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class EditProfilePage extends StatefulWidget {
   @override
@@ -8,59 +8,68 @@ class EditProfilePage extends StatefulWidget {
 }
 
 class _EditProfilePageState extends State<EditProfilePage> {
-  TextEditingController _nameController = TextEditingController();
-  String _name = ""; // Initialize with empty string
-  String _address = "123 Main Street";
-  String _email = ""; // Initialize with empty string
-  String _phoneNumber = "+1234567890";
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _languageController = TextEditingController();
+
+  User? _currentUser; // Nullable user
+  String _email = ""; // Default empty string for email
+  String _name = "";
+  String _language = "";
+  bool _isLoading = true; // Loading indicator state
 
   @override
   void initState() {
     super.initState();
-    // Call a function to fetch user data when the widget initializes
-    _fetchUserData();
+    _currentUser = FirebaseAuth.instance.currentUser; // Get current user
+    _email = _currentUser?.email ?? ""; // Get email, fallback to empty string
+    if (_currentUser != null) {
+      _fetchUserData(); // Fetch additional user data
+    }
   }
 
   Future<void> _fetchUserData() async {
     try {
-      // Get the currently logged-in user
-      User? user = FirebaseAuth.instance.currentUser;
+      if (_currentUser == null) return; // Exit if no logged-in user
+      
+      QuerySnapshot userQuery = await FirebaseFirestore.instance
+          .collection('users')
+          .where('user', isEqualTo: _email) // Fetch by email
+          .limit(1) // First matching document
+          .get();
 
-      if (user != null) {
-        // Get the user's email address
-        setState(() {
-          _email = user.email ?? "";
+      if (userQuery.docs.isNotEmpty) { // Check if data exists
+        DocumentSnapshot userSnapshot = userQuery.docs.first; // Get first doc
+        setState(() { // Update state with data
+          _name = userSnapshot.get("name") ?? "";
+          _language = userSnapshot.get("language") ?? "English";
+
+          _nameController.text = _name; 
+          _languageController.text = _language;
+
+          _isLoading = false; // Data loaded, stop loading
         });
-
-        // Now you can use the email address to fetch additional user data from Firestore
-        await _getUserDataFromFirestore(_email);
       }
     } catch (error) {
+      setState(() {
+        _isLoading = false; // Stop loading on error
+      });
       print("Error fetching user data: $error");
     }
   }
 
-  Future<void> _getUserDataFromFirestore(String email) async {
-    try {
-      // Query Firestore to get additional user data based on the email address
-      QuerySnapshot userQuery = await FirebaseFirestore.instance.collection('users').where('email', isEqualTo: email).limit(1).get();
-
-      if (userQuery.docs.isNotEmpty) {
-        DocumentSnapshot userSnapshot = userQuery.docs.first;
-
-        setState(() {
-          _name = userSnapshot['name'] ?? "";
-          _nameController.text = _name;
-          //print("Name from Firestore: $_name");
-        });
-      }
-    } catch (error) {
-      print("Error fetching user data from Firestore: $error");
-    }
-  }
-  
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text('Edit Profile'),
+        ),
+        body: Center(
+          child: CircularProgressIndicator(), // Loading indicator
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Edit Profile'),
@@ -70,20 +79,19 @@ class _EditProfilePageState extends State<EditProfilePage> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [const Color.fromARGB(255, 83, 34, 223), Colors.white],
+            colors: [Color.fromARGB(255, 83, 34, 223), Colors.white], // Gradient
           ),
         ),
         child: Padding(
-          padding: EdgeInsets.all(16.0),
+          padding: EdgeInsets.all(16.0), // Padding for content
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(height: 20),
+              SizedBox(height: 20), // Spacing
               Center(
                 child: GestureDetector(
                   onTap: () {
                     // Handle changing profile photo
-                    print('Change profile photo');
                   },
                   child: Stack(
                     children: [
@@ -95,10 +103,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         bottom: 0,
                         right: 0,
                         child: IconButton(
-                          icon: Icon(Icons.edit),
+                          icon: Icon(Icons.edit), // Edit icon for photo
                           onPressed: () {
                             // Handle changing profile photo
-                            print('Change profile photo');
                           },
                         ),
                       ),
@@ -106,58 +113,20 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   ),
                 ),
               ),
-              SizedBox(height: 20),
-            // Your profile photo widget here
-            SizedBox(height: 20),
-            Container(
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.black),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      SizedBox(width: 20), // Add space before the "Name" label
-                      Text(
-                        'Name',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                        ),
-                      ),
-                    ],
-                  ),
-                  TextFormField(
-                    controller: _nameController,
-                    //initialValue: _name,
-                    decoration: InputDecoration(
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(vertical: 5, horizontal: 20),
-                    ),
-                    cursorColor: Colors.black, // Set cursor color to black
-                    onChanged: (value) {
-                    setState(() {
-                         _name = value;
-                       });
-                     },
-                  ),
-                ],
-              ),
-            ),
-              SizedBox(height: 10),
+              SizedBox(height: 20), // Spacing
+              // Name Field
               Container(
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.black),
+                  border: Border.all(color: Colors.black), // Border decoration
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        SizedBox(width: 20), // Add space before the "Address" label
+                        SizedBox(width: 20), // Spacing
                         Text(
-                          'Address',
+                          'Name',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             color: Colors.black,
@@ -166,70 +135,65 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       ],
                     ),
                     TextFormField(
-                      initialValue: _address,
+                      controller: _nameController, // Controller for name
                       decoration: InputDecoration(
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+                        border: InputBorder.none, // No border
+                        contentPadding: EdgeInsets.symmetric(vertical: 5, horizontal: 20), // Padding
                       ),
-                      cursorColor: Colors.black, // Set cursor color to black
+                      cursorColor: Colors.black, // Cursor color
                       onChanged: (value) {
-                        setState(() {
-                          _address = value;
-                        });
+                        _name = value; // Update name
                       },
                     ),
                   ],
                 ),
               ),
-              SizedBox(height: 10),
+              SizedBox(height: 10), // Spacing
+              // Email Field
               Container(
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.black),
+                  border: Border.all(color: Colors.black), // Border decoration
                 ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start, // Cross-axis alignment
                   children: [
                     Row(
                       children: [
-                        SizedBox(width: 20), // Add space before the "Email" label
+                        SizedBox(width: 20), // Spacing
                         Text(
                           'Email',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: Colors.black,
+                            color: Colors.black, // Text color
                           ),
                         ),
                       ],
                     ),
                     TextFormField(
-                      initialValue: _email,
+                      initialValue: _email, // Set initial email
+                      readOnly: true, // Email is read-only
                       decoration: InputDecoration(
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                        contentPadding: EdgeInsets.symmetric(vertical: 5, horizontal: 20), // Padding
                       ),
-                      cursorColor: Colors.black, // Set cursor color to black
-                      onChanged: (value) {
-                        setState(() {
-                          _email = value;
-                        });
-                      },
+                      cursorColor: Colors.black, // Cursor color
                     ),
                   ],
                 ),
               ),
-              SizedBox(height: 10),
+              SizedBox(height: 10), // Spacing
+              // Language Field
               Container(
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.black),
+                  border: Border.all(color: Colors.black), // Border decoration
                 ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start, // Cross-axis alignment
                   children: [
                     Row(
                       children: [
-                        SizedBox(width: 20), // Add space before the "Phone Number" label
+                        SizedBox(width: 20), // Spacing
                         Text(
-                          'Phone Number',
+                          'Language',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             color: Colors.black,
@@ -238,33 +202,29 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       ],
                     ),
                     TextFormField(
-                      initialValue: _phoneNumber,
+                      controller: _languageController, // Language controller
                       decoration: InputDecoration(
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                        contentPadding: EdgeInsets.symmetric(vertical: 5, horizontal: 20), // Padding
                       ),
-                      cursorColor: Colors.black, // Set cursor color to black
+                      cursorColor: Colors.black, // Cursor color
                       onChanged: (value) {
-                        setState(() {
-                          _phoneNumber = value;
-                        });
+                        _language = value; // Update language
                       },
                     ),
                   ],
                 ),
               ),
-              SizedBox(height: 20),
+              SizedBox(height: 20), // Spacing
               Center(
                 child: ElevatedButton(
                   onPressed: () {
-                    // Handle saving changes
-                    print('Updated Profile:');
-                    print('Name: $_name');
-                    print('Address: $_address');
-                    print('Email: $_email');
-                    print('Phone Number: $_phoneNumber');
+                    // Save changes and display updated profile
+                    print("Updated Profile:");
+                    print("Name: $_name");
+                    print("Email: $_email");
+                    print("Language: $_language");
                   },
-                  child: Text('Save Changes'),
+                  child: Text("Save Changes"), // Button label
                 ),
               ),
             ],
@@ -277,12 +237,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
 void main() {
   runApp(MaterialApp(
-    home: EditProfilePage(),
+    home: EditProfilePage(), // Load with Edit Profile page
   ));
 }
 
-void main() {
-  runApp(MaterialApp(
-    home: EditProfilePage(),
-  ));
-}
