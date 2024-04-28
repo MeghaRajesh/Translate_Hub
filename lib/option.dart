@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mechat/screens/chat_screen.dart';
 import 'package:mechat/screens/home_screen.dart';
-import 'package:mechat/screens/language_selection_page.dart';
 import 'package:mechat/screens/login_screen.dart';
 import 'voice.dart';
 import 'edit_profile.dart'; // Import the edit profile page
@@ -55,10 +54,10 @@ class _TranslatePageState extends State<TranslatePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color.fromARGB(255, 83, 34, 223),
+        backgroundColor: Color.fromARGB(255, 10, 10, 10),
         title: Text(
           'TranslateHub',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(color: const Color.fromARGB(255, 252, 249, 249)),
         ),
         leading: PopupMenuButton(
           icon: Icon(Icons.menu, color: Colors.white),
@@ -99,8 +98,8 @@ class _TranslatePageState extends State<TranslatePage> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              const Color.fromARGB(255, 83, 34, 223),
-              Color.fromARGB(255, 204, 187, 250)
+              Color.fromARGB(255, 5, 1, 14),
+              Color.fromARGB(255, 3, 2, 8)
             ],
           ),
         ),
@@ -109,10 +108,14 @@ class _TranslatePageState extends State<TranslatePage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               SizedBox(height: 20),
-              Image.asset(
-                'images/option.jpg', // Provide your image path here
-                width: 300,
-                height: 300,
+              ClipRRect(
+                borderRadius: BorderRadius.circular(200), // Increase the radius to create a larger circle
+                child: Image.asset(
+                  'images/img.png', // Provide your image path here
+                  width: 300,
+                  height: 300,
+                  fit: BoxFit.cover, // Ensure the image covers the circle
+                ),
               ),
               SizedBox(height: 50),
               ElevatedButton(
@@ -120,9 +123,7 @@ class _TranslatePageState extends State<TranslatePage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => LanguageSelectionPage(
-                        // usermail: documentSnapshot['user'].toString(),
-                        // mail: widget.smail.toString(),
+                      builder: (context) => HomeScreen(
                       ),
                     ),
                   );
@@ -132,8 +133,9 @@ class _TranslatePageState extends State<TranslatePage> {
                       borderRadius: BorderRadius.circular(20), // Make the border oval-shaped
                   ),
                   padding: EdgeInsets.symmetric(
-                      vertical: 30,
-                      horizontal: 100), // Adjust the padding as needed
+                      vertical: 20,
+                      horizontal: 100),
+                      backgroundColor: Color.fromARGB(255, 255, 249, 249) // Adjust the padding as needed
                 ),
                 child: Text(
                   'Chat',
@@ -155,8 +157,9 @@ class _TranslatePageState extends State<TranslatePage> {
                       borderRadius: BorderRadius.circular(20), // Make the border oval-shaped
                   ),
                   padding: EdgeInsets.symmetric(
-                      vertical: 30,
-                      horizontal: 50), // Adjust the padding as needed
+                      vertical: 20,
+                      horizontal: 50),
+                      backgroundColor: Color.fromARGB(255, 255, 249, 249) // Adjust the padding as needed
                 ),
                 child: Text(
                   'Voice Translation',
