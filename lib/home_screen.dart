@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:mechat/screens/chat_screen.dart';
-
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
 
@@ -13,8 +12,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final CollectionReference collectionRef =
       FirebaseFirestore.instance.collection('users');
-  String? smail;
-
+  String? sName; // Changed variable name to reflect name instead of email
   String? currentUserid;
 
   @override
@@ -26,47 +24,44 @@ class _HomeScreenState extends State<HomeScreen> {
       print('Here is the uid: $currentUserid');
     }
 
-    getCurrentUserEmail();
+    getCurrentUserName(); // Changed function name
   }
 
-  void getCurrentUserEmail() async {
+  void getCurrentUserName() async { // Changed function name
     try {
       DocumentSnapshot documentSnapshot =
           await collectionRef.doc(currentUserid).get();
       if (documentSnapshot.exists) {
         setState(() {
-          smail = documentSnapshot['user'] as String?;
+          sName = documentSnapshot['name'] as String?; // Fetching name instead of email
         });
       }
     } catch (e) {
-      print('Error getting current user email: $e');
+      print('Error getting current user name: $e');
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 183, 165, 245),
+      backgroundColor: Color.fromARGB(255, 252, 252, 253),
       appBar: AppBar(
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: Color.fromARGB(255, 6, 5, 8),
         title: const Text(
-          'Me Chat',
+          'Chats',
           style: TextStyle(letterSpacing: 5, color: Colors.white),
         ),
         centerTitle: true,
-        actions: [
-          IconButton(
-            onPressed: () {
-              FirebaseAuth.instance.signOut().then((value) =>
-                  Navigator.of(context)
-                      .pushNamedAndRemoveUntil('/signout', (route) => false));
-            },
-            icon: const Icon(
-              Icons.logout,
-              color: Colors.white,
-            ),
-          ),
-        ],
+        // actions: [
+        //   IconButton(
+        //     onPressed: () {
+        //       FirebaseAuth.instance.signOut().then((value) =>
+        //           Navigator.of(context)
+        //               .pushNamedAndRemoveUntil('/signout', (route) => false));
+        //     },
+        //     icon: Icon(Icons.logout, color: Colors.white),
+        //   ),
+        // ],
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: collectionRef.snapshots(),
@@ -76,10 +71,9 @@ class _HomeScreenState extends State<HomeScreen> {
           }
 
           return ListView.builder(
-            itemCount: snapshot.hasData ? snapshot.data!.docs.length : 0,
+            itemCount: snapshot.data!.docs.length,
             itemBuilder: (context, index) {
               DocumentSnapshot documentSnapshot = snapshot.data!.docs[index];
-
               return currentUserid != documentSnapshot['useruid']
                   ? GestureDetector(
                       child: ListTile(
@@ -90,16 +84,20 @@ class _HomeScreenState extends State<HomeScreen> {
                         leading: Padding(
                           padding: const EdgeInsets.only(left: 8.0),
                           child: CircleAvatar(
-                            backgroundColor: Colors.deepPurple,
+                            backgroundColor: Color.fromARGB(255, 8, 7, 7),
                             child: Text(
-                              documentSnapshot['user'][0]
-                                  .toString()
-                                  .toUpperCase(),
+                              documentSnapshot['name'][0]
+                              .toString()
+                              .toUpperCase(), // Display first letter of the name
+                              style: TextStyle(
+                                color: Colors.white, // Set text color to white
+                              ),
                             ),
                           ),
                         ),
+
                         title: Text(
-                          documentSnapshot['user'],
+                          documentSnapshot['name'], // Display name instead of email
                           style: const TextStyle(
                             letterSpacing: 3,
                             fontSize: 15,
@@ -109,20 +107,16 @@ class _HomeScreenState extends State<HomeScreen> {
                       onTap: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(
-                            builder: (context) => ChatScreen(
-                              usermail: documentSnapshot['user'].toString(),
-                              mail: smail.toString(),
-                            ),
-                          ),
+                          MaterialPageRoute(builder: (context) => 
+                              ChatScreen(
+                                  usermail: documentSnapshot['name'].toString(), // Pass name instead of email
+                                  mail: sName.toString(), // Pass current user's name
+                                  ),
+                              ),
                         );
                       },
                     )
-                  : (snapshot.data!.docs.length == 1)
-                      ? const Center(
-                          child: Text('No new user'),
-                        )
-                      : const SizedBox.shrink();
+                  : SizedBox.shrink();
             },
           );
         },
