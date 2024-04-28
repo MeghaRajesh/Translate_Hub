@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:translator/translator.dart';
-import 'package:flutter_tts/flutter_tts.dart';
-import 'option.dart'; 
+
+import 'option.dart'; // Assuming the option.dart file is in the same directory
 
 class VoiceTranslation extends StatelessWidget {
   @override
@@ -17,7 +18,6 @@ class VoiceTranslation extends StatelessWidget {
   }
 }
 
-
 class TranslatorScreen extends StatefulWidget {
   @override
   _TranslatorScreenState createState() => _TranslatorScreenState();
@@ -29,15 +29,74 @@ class _TranslatorScreenState extends State<TranslatorScreen> {
   final FlutterTts flutterTts = FlutterTts();
   String translatedText = '';
   bool isListening = false;
-  List<String> languages = ['Select ', 'English', 'French', 'Hindi', 'German'];
-  String selectedLanguage1 = 'Select ';
-  String selectedLanguage2 = 'Select ';
+  List<String> languages = [
+    'Select ',
+    'English',
+    'French',
+    'Hindi',
+    'Arabic'
+  ]; // Adjusted languages list
+  String selectedLanguage1 =
+      'Select '; // Default selection for the first dropdown
+  String selectedLanguage2 =
+      'Select '; // Default selection for the second dropdown
 
-  void translateText(String text, String targetLanguage) async {
-    Translation translation = await translator.translate(text, to: targetLanguage);
-    setState(() {
-      translatedText = translation.text;
-    });
+  void translateText(String text) async {
+    // Check if both source and target languages are selected
+    if (selectedLanguage1 != 'Select ' && selectedLanguage2 != 'Select ') {
+      String sourceLanguageCode = ''; // Source language code
+      String targetLanguageCode = ''; // Target language code
+
+      // Set the source language code based on selectedLanguage1
+      switch (selectedLanguage1) {
+        case 'English':
+          sourceLanguageCode = 'en';
+          break;
+        case 'French':
+          sourceLanguageCode = 'fr';
+          break;
+        case 'Hindi':
+          sourceLanguageCode = 'hi';
+          break;
+        case 'Arabic':
+          sourceLanguageCode = 'ar';
+          break;
+        default:
+          // Default to English if no language is selected
+          sourceLanguageCode = 'en';
+      }
+
+      // Set the target language code based on selectedLanguage2
+      switch (selectedLanguage2) {
+        case 'English':
+          targetLanguageCode = 'en';
+          break;
+        case 'French':
+          targetLanguageCode = 'fr';
+          break;
+        case 'Hindi':
+          targetLanguageCode = 'hi';
+          break;
+        case 'Arabic':
+          targetLanguageCode = 'ar';
+          break;
+        default:
+          // Default to English if no language is selected
+          targetLanguageCode = 'en';
+      }
+
+      // Translate text from source language to target language
+      Translation translation;
+      // If source is German and target is English, directly translate
+
+      // Translate using the specified source and target language codes
+      translation = await translator.translate(text,
+          from: sourceLanguageCode, to: targetLanguageCode);
+
+      setState(() {
+        translatedText = translation.text;
+      });
+    }
   }
 
   void startListening() async {
@@ -47,7 +106,7 @@ class _TranslatorScreenState extends State<TranslatorScreen> {
       });
       speech.listen(
         onResult: (result) {
-          translateText(result.recognizedWords, selectedLanguage2 == 'English' ? 'en' : selectedLanguage2 == 'French' ? 'fr' : selectedLanguage2 == 'Hindi' ? 'hi' : 'de');
+          translateText(result.recognizedWords);
         },
       );
     }
@@ -71,7 +130,7 @@ class _TranslatorScreenState extends State<TranslatorScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color.fromARGB(255, 83, 34, 223),
+        backgroundColor: Color.fromARGB(255, 2, 0, 7),
         title: Text(
           'Voice Translation',
           style: TextStyle(
@@ -79,7 +138,7 @@ class _TranslatorScreenState extends State<TranslatorScreen> {
           ),
         ),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: Color.fromARGB(255, 255, 254, 254)),
           onPressed: () {
             Navigator.push(
               context,
@@ -96,7 +155,7 @@ class _TranslatorScreenState extends State<TranslatorScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color.fromARGB(255, 83, 34, 223), Colors.white],
+            colors: [Color.fromARGB(255, 252, 251, 253), Colors.white],
           ),
         ),
         child: Center(
@@ -108,7 +167,7 @@ class _TranslatorScreenState extends State<TranslatorScreen> {
                 width: 300,
                 height: 70.0,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: const Color.fromARGB(255, 7, 7, 7),
                   borderRadius: BorderRadius.circular(10.0),
                 ),
                 padding: EdgeInsets.all(10.0),
@@ -119,12 +178,12 @@ class _TranslatorScreenState extends State<TranslatorScreen> {
                       setState(() {
                         selectedLanguage1 = newValue ?? 'Select';
                       });
-                    }, selectedLanguage1 == 'English' ? 'en' : selectedLanguage1 == 'French' ? 'fr' : selectedLanguage1 == 'Hindi' ? 'hi' : 'de'),
+                    }),
                     buildDropdown(selectedLanguage2, (String? newValue) {
                       setState(() {
                         selectedLanguage2 = newValue ?? 'Select';
                       });
-                    }, selectedLanguage2 == 'English' ? 'en' : selectedLanguage2 == 'French' ? 'fr' : selectedLanguage2 == 'Hindi' ? 'hi' : 'de'),
+                    }),
                   ],
                 ),
               ),
@@ -133,13 +192,14 @@ class _TranslatorScreenState extends State<TranslatorScreen> {
                 width: 200.0,
                 height: 200.0,
                 decoration: BoxDecoration(
-                  color: Color.fromARGB(255, 205, 198, 231),
+                  color: Color.fromARGB(255, 7, 7, 7),
                   borderRadius: BorderRadius.circular(10.0), // Rounded edges
                 ),
                 child: Center(
                   child: Text(
                     translatedText,
-                    style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold),
+                    style:
+                        TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold, color: Colors.white),
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -148,9 +208,16 @@ class _TranslatorScreenState extends State<TranslatorScreen> {
               ElevatedButton(
                 onPressed: () {
                   // Speak the translated text in Hindi when the button is pressed
-                  flutterTts.setLanguage(selectedLanguage2 == 'Hindi' ? 'hi-IN' : 'en-US'); // Set the language to Hindi if selected, otherwise English
+                  flutterTts.setLanguage('hi-IN'); // Set the language to Hindi
                   flutterTts.speak(translatedText);
                 },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  textStyle: TextStyle(
+                    fontSize: 16,
+                    color: Colors.white,
+                  ),
+                ),
                 child: Text('Speak'),
               ),
               SizedBox(height: 40.0),
@@ -179,26 +246,21 @@ class _TranslatorScreenState extends State<TranslatorScreen> {
     );
   }
 
-  Widget buildDropdown(String selectedValue, void Function(String?) onChanged, String targetLanguage) {
+  Widget buildDropdown(String selectedValue, void Function(String?) onChanged) {
     return Container(
       width: 120,
       height: 30.0,
       decoration: BoxDecoration(
-        color: Color.fromARGB(255, 77, 73, 124),
+        color: Color.fromARGB(255, 251, 251, 252),
         borderRadius: BorderRadius.circular(10.0),
       ),
       child: DropdownButton<String>(
         value: selectedValue,
-        icon: Icon(Icons.arrow_drop_down, color: Colors.white),
+        icon: Icon(Icons.arrow_drop_down, color: const Color.fromARGB(255, 8, 7, 7)),
         iconSize: 24,
         elevation: 16,
-        style: TextStyle(color: Color.fromARGB(255, 134, 129, 186)),
-        onChanged: (newValue) {
-          onChanged(newValue);
-          if (newValue != 'Select ') {
-            translateText(translatedText, targetLanguage);
-          }
-        },
+        style: TextStyle(color: Color.fromARGB(255, 3, 3, 3)),
+        onChanged: onChanged,
         items: languages.map<DropdownMenuItem<String>>((String value) {
           return DropdownMenuItem<String>(
             value: value,
