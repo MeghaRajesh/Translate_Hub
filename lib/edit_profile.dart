@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:image_picker/image_picker.dart';
 
 class EditProfilePage extends StatefulWidget {
   @override
@@ -11,49 +12,112 @@ class _EditProfilePageState extends State<EditProfilePage> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _languageController = TextEditingController();
 
-  User? _currentUser; // Nullable user
-  String _email = ""; // Default empty string for email
+  User? _currentUser;
+  String _email = "";
   String _name = "";
   String _language = "";
-  bool _isLoading = true; // Loading indicator state
+  bool _isLoading = true;
+
+  final ImagePicker _picker = ImagePicker();
+  XFile? _imageFile;
 
   @override
   void initState() {
     super.initState();
-    _currentUser = FirebaseAuth.instance.currentUser; // Get current user
-    _email = _currentUser?.email ?? ""; // Get email, fallback to empty string
+    _currentUser = FirebaseAuth.instance.currentUser;
+    _email = _currentUser?.email ?? "";
     if (_currentUser != null) {
-      _fetchUserData(); // Fetch additional user data
+      _fetchUserData();
     }
   }
 
   Future<void> _fetchUserData() async {
+    if (_currentUser == null) return;
+
     try {
-      if (_currentUser == null) return; // Exit if no logged-in user
-      
       QuerySnapshot userQuery = await FirebaseFirestore.instance
           .collection('users')
-          .where('user', isEqualTo: _email) // Fetch by email
-          .limit(1) // First matching document
+          .where('user', isEqualTo: _email)  // Search by email
+          .limit(1)  // Get only the first matching document
           .get();
 
-      if (userQuery.docs.isNotEmpty) { // Check if data exists
-        DocumentSnapshot userSnapshot = userQuery.docs.first; // Get first doc
-        setState(() { // Update state with data
+      if (userQuery.docs.isNotEmpty) {
+        DocumentSnapshot userSnapshot = userQuery.docs.first;
+        setState(() {
           _name = userSnapshot.get("name") ?? "";
           _language = userSnapshot.get("language") ?? "English";
 
-          _nameController.text = _name; 
+          _nameController.text = _name;
           _languageController.text = _language;
 
-          _isLoading = false; // Data loaded, stop loading
+          _isLoading = false;
         });
+        print("Fetched language: $_language");
       }
     } catch (error) {
       setState(() {
-        _isLoading = false; // Stop loading on error
+        _isLoading = false;
       });
       print("Error fetching user data: $error");
+    }
+  }
+
+  Future<void> _pickImageFromGallery() async {
+    final XFile? pickedImage = await _picker.pickImage(
+      source: ImageSource.gallery,
+    );
+
+    if (pickedImage != null) {
+      setState(() {
+        _imageFile = pickedImage;
+      });
+    }
+  }
+
+  Future<void> _saveChanges(BuildContext context) async {
+    if (_currentUser == null) return;
+
+    try {
+      final userCollection = FirebaseFirestore.instance.collection('users');
+
+      QuerySnapshot userQuery = await userCollection
+          .where('user', isEqualTo: _email)  // Find the document with the current email
+          .limit(1)
+          .get();
+
+      if (userQuery.docs.isNotEmpty) {
+        DocumentSnapshot userSnapshot = userQuery.docs.first;
+
+        String currentName = _nameController.text;
+        String currentLanguage = _languageController.text;
+        
+      
+
+        Map<String, dynamic> updatedData = {};  // Map to hold updates
+        
+        if (_nameController.text == _name) {  // Detect name change
+        updatedData['name'] = _nameController.text;
+        }
+
+        if (currentLanguage == _language) {  // Detect language change
+          updatedData['language'] = currentLanguage;
+        }
+
+        if (updatedData.isNotEmpty) {  // If there's anything to update
+          await userSnapshot.reference.update(updatedData);// Update Firestore
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("Profile updated successfully."),
+              duration: Duration(seconds: 2),  // Adjust duration as needed
+            ),
+          );
+          print("Profile updated successfully.");
+        }
+      } else {
+        print("No document found with the given email.");
+      }
+    } catch (error) {
+      print("Error updating user data: $error");  // Error handling
     }
   }
 
@@ -62,37 +126,39 @@ class _EditProfilePageState extends State<EditProfilePage> {
     if (_isLoading) {
       return Scaffold(
         appBar: AppBar(
-          title: Text('Edit Profile'),
+          backgroundColor: Colors.black,
+          title: const Text('Edit Profile', style: TextStyle(color: Colors.white)),
         ),
         body: Center(
-          child: CircularProgressIndicator(), // Loading indicator
+          child: CircularProgressIndicator(
+            color: Colors.white,
+          ),
         ),
       );
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Edit Profile'),
+        backgroundColor: Colors. black,
+        title: const Text('Edit Profile', style: TextStyle(color: Colors. white)),
       ),
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color.fromARGB(255, 83, 34, 223), Colors.white], // Gradient
+            colors: [Colors .white, Colors. white],
           ),
         ),
         child: Padding(
-          padding: EdgeInsets.all(16.0), // Padding for content
+          padding: const EdgeInsets. all (16.0),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment .start,
             children: [
-              SizedBox(height: 20), // Spacing
+              const SizedBox(height: 20),
               Center(
                 child: GestureDetector(
-                  onTap: () {
-                    // Handle changing profile photo
-                  },
+                  onTap: _pickImageFromGallery,
                   child: Stack(
                     children: [
                       CircleAvatar(
@@ -102,129 +168,100 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       Positioned(
                         bottom: 0,
                         right: 0,
-                        child: IconButton(
-                          icon: Icon(Icons.edit), // Edit icon for photo
-                          onPressed: () {
-                            // Handle changing profile photo
-                          },
+                        child: Container(
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors .black,
+                          ),
+                          child: IconButton(
+                            icon: const Icon(Icons.camera_alt),
+                            color: Colors .white,
+                            onPressed: _pickImageFromGallery,
+                          ),
                         ),
                       ),
                     ],
                   ),
                 ),
               ),
-              SizedBox(height: 20), // Spacing
-              // Name Field
-              Container(
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.black), // Border decoration
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        SizedBox(width: 20), // Spacing
-                        Text(
-                          'Name',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                          ),
-                        ),
-                      ],
-                    ),
-                    TextFormField(
-                      controller: _nameController, // Controller for name
-                      decoration: InputDecoration(
-                        border: InputBorder.none, // No border
-                        contentPadding: EdgeInsets.symmetric(vertical: 5, horizontal: 20), // Padding
-                      ),
-                      cursorColor: Colors.black, // Cursor color
-                      onChanged: (value) {
-                        _name = value; // Update name
-                      },
-                    ),
-                  ],
+              const SizedBox(height: 20),
+              // Name Field with Profile Icon
+              Text(
+                'Name',
+                style: const TextStyle(
+                  fontWeight: FontWeight. bold,
+                  color: Colors. black,
                 ),
               ),
-              SizedBox(height: 10), // Spacing
-              // Email Field
-              Container(
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.black), // Border decoration
+              TextFormField(
+                controller: _nameController,
+                decoration: InputDecoration(
+                  border: InputBorder.none,
+                  prefixIcon: Icon(Icons.account_circle, color: Colors.black),
+                  prefixIconConstraints: BoxConstraints(
+                    minWidth: 50, // Increase space between icon and text
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 5, horizontal: 20),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start, // Cross-axis alignment
-                  children: [
-                    Row(
-                      children: [
-                        SizedBox(width: 20), // Spacing
-                        Text(
-                          'Email',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black, // Text color
-                          ),
-                        ),
-                      ],
-                    ),
-                    TextFormField(
-                      initialValue: _email, // Set initial email
-                      readOnly: true, // Email is read-only
-                      decoration: InputDecoration(
-                        contentPadding: EdgeInsets.symmetric(vertical: 5, horizontal: 20), // Padding
-                      ),
-                      cursorColor: Colors.black, // Cursor color
-                    ),
-                  ],
+                cursorColor: Colors .black,
+                onChanged: (value) {
+                  _name = value;
+                },
+              ),
+              const SizedBox(height: 10),
+              // Email Field with Mail Icon
+              Text(
+                'Email',
+                style: const TextStyle(
+                  fontWeight: FontWeight. bold,
+                  color: Colors. black,
                 ),
               ),
-              SizedBox(height: 10), // Spacing
-              // Language Field
-              Container(
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.black), // Border decoration
+              TextFormField(
+                initialValue: _email,
+                readOnly: true,
+                decoration: InputDecoration(
+                  border: InputBorder.none,
+                  prefixIcon: Icon(Icons.email, color: Colors.black),
+                  prefixIconConstraints: BoxConstraints(
+                    minWidth: 50, // Increase space between icon and text
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 5, horizontal: 20),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start, // Cross-axis alignment
-                  children: [
-                    Row(
-                      children: [
-                        SizedBox(width: 20), // Spacing
-                        Text(
-                          'Language',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                          ),
-                        ),
-                      ],
-                    ),
-                    TextFormField(
-                      controller: _languageController, // Language controller
-                      decoration: InputDecoration(
-                        contentPadding: EdgeInsets.symmetric(vertical: 5, horizontal: 20), // Padding
-                      ),
-                      cursorColor: Colors.black, // Cursor color
-                      onChanged: (value) {
-                        _language = value; // Update language
-                      },
-                    ),
-                  ],
+                cursorColor: Colors .black,
+              ),
+              const SizedBox(height: 10),
+              // Language Field with Language Icon
+              Text(
+                'Language',
+                style: const TextStyle(
+                  fontWeight: FontWeight .bold,
+                  color: Colors. black,
                 ),
               ),
-              SizedBox(height: 20), // Spacing
+              TextFormField(
+                controller: _languageController,
+                decoration: InputDecoration(
+                  border: InputBorder.none,
+                  prefixIcon: Icon(Icons.language, color: Colors.black),
+                  prefixIconConstraints: BoxConstraints(
+                    minWidth: 50, // Increase space between icon and text
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 5, horizontal: 20),
+                ),
+                cursorColor: Colors .black,
+                onChanged: (value) {
+                  _language = value;
+                },
+              ),
+              const SizedBox(height: 20),
               Center(
                 child: ElevatedButton(
-                  onPressed: () {
-                    // Save changes and display updated profile
-                    print("Updated Profile:");
-                    print("Name: $_name");
-                    print("Email: $_email");
-                    print("Language: $_language");
-                  },
-                  child: Text("Save Changes"), // Button label
+                  onPressed: () { _saveChanges(context);},
+                  style: ButtonStyle(
+                    backgroundColor: MaterialStateProperty.all(Colors. black), 
+                  ),
+                  child: Text("Save Changes"), 
                 ),
               ),
             ],
@@ -237,7 +274,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
 void main() {
   runApp(MaterialApp(
-    home: EditProfilePage(), // Load with Edit Profile page
+    home: EditProfilePage(),
   ));
 }
-
